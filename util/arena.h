@@ -39,10 +39,13 @@ class Arena {
   char* AllocateNewBlock(size_t block_bytes);
 
   // Allocation state
+  // 指向当前块第一个free的字节
   char* alloc_ptr_;
+  // 当前块剩余多少字节free的内存
   size_t alloc_bytes_remaining_;
 
   // Array of new[] allocated memory blocks
+  // 用new分配的内存块的数组（存放的是当前已经分配块的首地址指针
   std::vector<char*> blocks_;
 
   // Total memory usage of the arena.
@@ -52,6 +55,7 @@ class Arena {
   std::atomic<size_t> memory_usage_;
 };
 
+// Step 1
 inline char* Arena::Allocate(size_t bytes) {
   // The semantics of what to return are a bit messy if we allow
   // 0-byte allocations, so we disallow them here (we don't need
