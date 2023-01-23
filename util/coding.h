@@ -105,6 +105,11 @@ inline uint64_t DecodeFixed64(const char* ptr) {
 // Internal routine for use by fallback path of GetVarint32Ptr
 const char* GetVarint32PtrFallback(const char* p, const char* limit,
                                    uint32_t* value);
+
+/**
+该方法无法处理value < 128的情况，直接将result赋值给value    
+对于小于128的数据进行特判，因为大部分数据都小于128，可以通过内联函数提高计算效率
+*/                              
 inline const char* GetVarint32Ptr(const char* p, const char* limit,
                                   uint32_t* value) {
   if (p < limit) {
@@ -114,6 +119,7 @@ inline const char* GetVarint32Ptr(const char* p, const char* limit,
       return p + 1;
     }
   }
+  // 否则调用GetVarint32PtrFallback方法  
   return GetVarint32PtrFallback(p, limit, value);
 }
 

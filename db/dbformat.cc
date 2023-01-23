@@ -12,12 +12,20 @@
 
 namespace leveldb {
 
+/**
+先将seq左移8位，然后和t进行或操作，相当于把t放到了seq的低8位
+*/
 static uint64_t PackSequenceAndType(uint64_t seq, ValueType t) {
   assert(seq <= kMaxSequenceNumber);
   assert(t <= kValueTypeForSeek);
   return (seq << 8) | t;
 }
 
+/**
+AppendInternalKey函数先把user_key添加到*result中
+然后用PackSequenceAndType函数将sequence和type打包
+并将打包的结果添加到*result中
+*/ 
 void AppendInternalKey(std::string* result, const ParsedInternalKey& key) {
   result->append(key.user_key.data(), key.user_key.size());
   PutFixed64(result, PackSequenceAndType(key.sequence, key.type));

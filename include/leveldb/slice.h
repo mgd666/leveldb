@@ -27,12 +27,14 @@ namespace leveldb {
 class LEVELDB_EXPORT Slice {
  public:
   // Create an empty slice.
+  // 默认是空字符串
   Slice() : data_(""), size_(0) {}
 
   // Create a slice that refers to d[0,n-1].
   Slice(const char* d, size_t n) : data_(d), size_(n) {}
 
   // Create a slice that refers to the contents of "s"
+  // 这里就是InternalKey来构造使用的
   Slice(const std::string& s) : data_(s.data()), size_(s.size()) {}
 
   // Create a slice that refers to s[0,strlen(s)-1]
@@ -53,6 +55,7 @@ class LEVELDB_EXPORT Slice {
 
   // Return the ith byte in the referenced data.
   // REQUIRES: n < size()
+  // 重载[]运算符，可以像数组一样访问Slice
   char operator[](size_t n) const {
     assert(n < size());
     return data_[n];
@@ -65,6 +68,7 @@ class LEVELDB_EXPORT Slice {
   }
 
   // Drop the first "n" bytes from this slice.
+  // 删除前n个数据，对于slice来说就是指针偏移
   void remove_prefix(size_t n) {
     assert(n <= size());
     data_ += n;
@@ -81,6 +85,7 @@ class LEVELDB_EXPORT Slice {
   int compare(const Slice& b) const;
 
   // Return true iff "x" is a prefix of "*this"
+  // 判断Slice是不是以某个Slice开头的
   bool starts_with(const Slice& x) const {
     return ((size_ >= x.size_) && (memcmp(data_, x.data_, x.size_) == 0));
   }
@@ -98,9 +103,12 @@ inline bool operator==(const Slice& x, const Slice& y) {
 inline bool operator!=(const Slice& x, const Slice& y) { return !(x == y); }
 
 inline int Slice::compare(const Slice& b) const {
+  // 取二者的最短长度，避免越界
   const size_t min_len = (size_ < b.size_) ? size_ : b.size_;
+  // 通过memcmp函数进行比较
   int r = memcmp(data_, b.data_, min_len);
   if (r == 0) {
+    // 前几个相同，谁长谁大
     if (size_ < b.size_)
       r = -1;
     else if (size_ > b.size_)

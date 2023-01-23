@@ -51,20 +51,37 @@ class InternalKey;
 // Value types encoded as the last component of internal keys.
 // DO NOT CHANGE THESE ENUM VALUES: they are embedded in the on-disk
 // data structures.
-enum ValueType { kTypeDeletion = 0x0, kTypeValue = 0x1 };
+enum ValueType { 
+  kTypeDeletion = 0x0, //删除
+  kTypeValue = 0x1     //数据
+};
 // kValueTypeForSeek defines the ValueType that should be passed when
 // constructing a ParsedInternalKey object for seeking to a particular
 // sequence number (since we sort sequence numbers in decreasing order
 // and the value type is embedded as the low 8 bits in the sequence
 // number in internal keys, we need to use the highest-numbered
 // ValueType, not the lowest).
+// 用于查找（在查找对象时，对象不能删除，因此kValueType是KTypeValue
 static const ValueType kValueTypeForSeek = kTypeValue;
 
+/**
+SequenceNumber 是一个无符号64位整形的值，leveldb每添加/修改一次记录都会触发其+1
+*/
 typedef uint64_t SequenceNumber;
 
 // We leave eight bits empty at the bottom so a type and sequence#
 // can be packed together into 64-bits.
+
+/**
+0x1ull:u-unsigned 无符号；l-long 长整型
+ll就是64位整型。整个0x1ull代表的含义是无符号64位整型常量1，用16进制表示
+*/
 static const SequenceNumber kMaxSequenceNumber = ((0x1ull << 56) - 1);
+/**
+用二进制表示就是：0000 0000 1111 1111 1111 1111 1111 1111
+如果seq大于kMaxSequenceNumber，左移8位的话会移出
+（看dbformat.cc的PackSequenceAndType函数）
+*/
 
 struct ParsedInternalKey {
   Slice user_key;
@@ -92,6 +109,7 @@ void AppendInternalKey(std::string* result, const ParsedInternalKey& key);
 bool ParseInternalKey(const Slice& internal_key, ParsedInternalKey* result);
 
 // Returns the user key portion of an internal key.
+// 提取user_key（除去8位后的都是user_key)
 inline Slice ExtractUserKey(const Slice& internal_key) {
   assert(internal_key.size() >= 8);
   return Slice(internal_key.data(), internal_key.size() - 8);
@@ -133,25 +151,35 @@ class InternalFilterPolicy : public FilterPolicy {
 // incorrectly use string comparisons instead of an InternalKeyComparator.
 class InternalKey {
  private:
+  // 把Slice变成了string类型
   std::string rep_;
 
  public:
   InternalKey() {}  // Leave rep_ as empty to indicate it is invalid
+  // 可以看到内部键是如何被构造的
+  // Slice（外部键），顺序号，值类型
   InternalKey(const Slice& user_key, SequenceNumber s, ValueType t) {
+    // 内部键生成函数
     AppendInternalKey(&rep_, ParsedInternalKey(user_key, s, t));
   }
 
+  // 解码内部键函数
+  // 注意：传入的slice并不是User_key(外部键),而是InternalKey.Encode()编码而来的
   bool DecodeFrom(const Slice& s) {
+    // 直接拷贝到rep_里
     rep_.assign(s.data(), s.size());
     return !rep_.empty();
   }
-
+  // 把内部键编码成Slice格式，其实就是用Slice封装一下
   Slice Encode() const {
     assert(!rep_.empty());
+    // 这里直接返回的stirng，
     return rep_;
   }
 
-  Slice user_key() const { return ExtractUserKey(rep_); }
+  Slice user_key() const { 
+    return ExtractUserKey(rep_); 
+  }
 
   void SetFrom(const ParsedInternalKey& p) {
     rep_.clear();
