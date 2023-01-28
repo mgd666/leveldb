@@ -61,6 +61,7 @@ enum ValueType {
 // and the value type is embedded as the low 8 bits in the sequence
 // number in internal keys, we need to use the highest-numbered
 // ValueType, not the lowest).
+
 // 用于查找（在查找对象时，对象不能删除，因此kValueType是KTypeValue
 static const ValueType kValueTypeForSeek = kTypeValue;
 
@@ -209,6 +210,7 @@ inline bool ParseInternalKey(const Slice& internal_key,
 }
 
 // A helper class useful for DBImpl::Get()
+// 因为查找可能需要查找memtable和sst，因此需要存储的内容要包含多种存储结构的键值
 class LookupKey {
  public:
   // Initialize *this for looking up user_key at a snapshot with
@@ -243,7 +245,9 @@ class LookupKey {
   char space_[200];  // Avoid allocation for short keys
 };
 
+// 析构函数，因为有申请内存的可能性
 inline LookupKey::~LookupKey() {
+    // 判断内存是否为堆上申请的，如果是就释放
   if (start_ != space_) delete[] start_;
 }
 

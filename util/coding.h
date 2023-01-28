@@ -51,6 +51,9 @@ char* EncodeVarint64(char* dst, uint64_t value);
 // Lower-level versions of Put... that write directly into a character buffer
 // REQUIRES: dst has enough space for the value being written
 
+/**
+ * 将value转换为小端字节序存储到buffer中
+*/
 inline void EncodeFixed32(char* dst, uint32_t value) {
   uint8_t* const buffer = reinterpret_cast<uint8_t*>(dst);
 

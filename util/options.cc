@@ -8,7 +8,8 @@
 #include "leveldb/env.h"
 
 namespace leveldb {
-
+// BytewiseComparator()的返回值作为变量用于comparator赋值
+// BytewiseComparator()返回的就是BytewiseComparatorImpl对象指针
 Options::Options() : comparator(BytewiseComparator()), env(Env::Default()) {}
 
 }  // namespace leveldb
